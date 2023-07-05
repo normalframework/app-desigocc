@@ -1,0 +1,4 @@
+/dist
+*.js.map
+node_modules
+nf.config.json

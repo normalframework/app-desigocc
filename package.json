@@ -1,0 +1,19 @@
+{
+  "name": "normal-applictions-template",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "build": "npx tsc",
+    "configure": "npx applications-sdk configure",
+    "deploy": "npx applications-sdk deploy"
+  },
+  "dependencies": {
+    "@normalframework/applications-sdk": "0.1.20",
+    "pg": "^8.11.0",
+    "typescript": "^5.0.2"
+  },
+  "author": "",
+  "license": "ISC"
+}
