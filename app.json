@@ -1,0 +1,51 @@
+{
+    "name": "Desigo CC NORIS API Driver",
+    "layer": {
+	"name": "hpl:desigocc",
+	"indexed": true,
+	"components": [
+	    "attr_objectId",
+	    "attr_objectModelName",
+	    "attr_designation",
+	    "period"
+	],
+	"component_options": [
+	    "TAG",
+	    "TAG",
+	    "TEXT",
+	    "NUMERIC"
+	],
+	"name_attribute": "designation",
+	"object_id_attribute": "objectId",
+	"default_extraction_attribute": "designation"
+    },
+    "options": [
+	{
+	    "name": "baseUrl",
+	    "option_type": "TYPE_STRING",
+	    "required": true
+	},
+	{
+	    "name": "username",
+	    "option_type": "TYPE_STRING",
+	    "required": true
+	},
+	{
+	    "name": "password",
+	    "option_type": "TYPE_STRING",
+	    "required": true,
+	    "secret": true
+	},
+	{
+	    "name": "systemId",
+	    "option_type": "TYPE_SIGNED",
+	    "default_value": {
+		"signed": 1
+	    }
+	},
+	{
+	    "name": "viewId",
+	    "option_type": "TYPE_SIGNED"
+	}
+    ]
+}
