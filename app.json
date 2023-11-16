@@ -7,13 +7,15 @@
 	    "attr_objectId",
 	    "attr_objectModelName",
 	    "attr_designation",
-	    "period"
+	    "period",
+	    "attr_designationTokens"
 	],
 	"component_options": [
 	    "TAG",
 	    "TAG",
 	    "TEXT",
-	    "NUMERIC"
+	    "NUMERIC",
+	    "TEXT"
 	],
 	"name_attribute": "designation",
 	"object_id_attribute": "objectId",
