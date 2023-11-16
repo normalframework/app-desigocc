@@ -41,7 +41,6 @@ module.exports = async ({sdk, config, points}) => {
         throw e 
     }
   }
-  console.log(token)
 
   let object_ids = []
   for (let i = 0; i < points.length; i++) {
@@ -50,37 +49,43 @@ module.exports = async ({sdk, config, points}) => {
     }
   }
 
-  let values = await http.post(config.baseUrl+"/values", object_ids, { headers: {
-        "authorization": "Bearer " + token
-      },
-        timeout: 15000,
-
-  })
-
-  for (let i = 0; i < values.data.length; i ++) {
-    let val = values.data[i].Value
-    if (!val.QualityGood) {
-        continue
-    }
-    var ts, real
-    try{
-        ts = Date.parse(val.Timestamp)
-        real = parseFloat(val.Value)
-    } catch {
-        continue
-    }
-    let uuid = uuidv5(values.data[i].ObjectId, NAMESPACE)
-    console.log(uuid, values.data[i].ObjectId, ts, real)
-
-    let res = await sdk.http.post("http://localhost:8080/api/v1/point/data", {
-        uuid: uuid,
-        values: [
-            {
-                ts: val.Timestamp,
-                real: real,
-            }
-        ]
+  let total_updates = 0
+  for (let i = 0; i < object_ids.length; i += batch_size) {
+    let values = await http.post(config.baseUrl+"/values", object_ids.slice(i, i+batch_size), { headers: {
+          "authorization": "Bearer " + token
+        },
+          timeout: 15000,
     })
-    console.log(res)
+    sdk.event(`Processing ${values.data.length} values` )
+
+      for (let i = 0; i < values.data.length; i ++) {
+        let val = values.data[i].Value
+        //  console.log(values.data[i])
+        if (!val.QualityGood) {
+            continue
+        }
+      var ts, real
+      try{
+          ts = Date.parse(val.Timestamp)
+          real = parseFloat(val.Value)
+      } catch {
+          continue
+      }
+      let uuid = uuidv5(values.data[i].ObjectId, NAMESPACE)
+      console.log(uuid, values.data[i].ObjectId, ts, real)
+
+      let res = await sdk.http.post("http://localhost:8080/api/v1/point/data", {
+          uuid: uuid,
+          values: [
+              {
+                  ts: val.Timestamp,
+                  real: real,
+              }
+          ]
+      })
+      total_updates += 1
+
+    }
   }
+  sdk.event(`Polling finished with ${total_updates} new values`)
 }

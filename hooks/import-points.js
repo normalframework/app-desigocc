@@ -66,7 +66,7 @@ module.exports = async ({sdk, config}) => {
     }
     for (let i = 0; i < nodes.length; i++) {
       console.log(nodes[i].ObjectId)
-      if (nodes[i].Attributes.DefaultProperty == "Present_Value") {
+      if (nodes[i].Attributes.DefaultProperty == "Present_Value" || nodes[i].Attributes.DefaultProperty == "Value") {
         points.push({
           layer: "hpl:desigocc",
           uuid: uuidv5(nodes[i].ObjectId, NAMESPACE),
@@ -74,12 +74,15 @@ module.exports = async ({sdk, config}) => {
           attrs: {
             "objectId": nodes[i].ObjectId,
             "designation": nodes[i].Designation,
+            "designationTokens": nodes[i].Designation.replace(/[\_\.]/g, " "),
             "managedTypeName": nodes[i].Attributes.ManagedTypeName,
             "objectModelName": nodes[i].Attributes.ObjectModelName,
           },
           protocol_id: nodes[i].ObjectId,
           point_type: "POINT",
         })
+      } else {
+              console.log(nodes[i])
       }
     }
     sdk.event(`Adding ${points.length} points`)
