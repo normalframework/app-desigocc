@@ -64,9 +64,22 @@ module.exports = async ({sdk, config}) => {
     if (nodes.length == 0) {
       break
     }
+    // create a device point so Device Health will work
+    await http.post(`http://${process.env.NFURL}/api/v1/point/points`, {
+      "points": [ {
+        layer: "hpl:desigocc",
+        uuid: NAMESPACE,
+        device_uuid: NAMESPACE,
+        name: config.baseUrl,
+        point_type: "DEVICE"
+      }
+      ]
+    })
+
     for (let i = 0; i < nodes.length; i++) {
       console.log(nodes[i].ObjectId)
       if (nodes[i].Attributes.DefaultProperty == "Present_Value" || nodes[i].Attributes.DefaultProperty == "Value") {
+        let system_name =  nodes[i].Designation.split(":")[0]
         points.push({
           layer: "hpl:desigocc",
           uuid: uuidv5(nodes[i].ObjectId, NAMESPACE),
@@ -78,7 +91,7 @@ module.exports = async ({sdk, config}) => {
             "designationTokens": nodes[i].Designation.replace(/[\_\.]/g, " ") + " " +  nodes[i].ObjectId.replace(/[\_\.]/g, " "),
             "managedTypeName": nodes[i].Attributes.ManagedTypeName,
             "objectModelName": nodes[i].Attributes.ObjectModelName,
-            "systemName": nodes[i].Designation.split(":")[0],
+            "systemName": system_name,
           },
           protocol_id: nodes[i].ObjectId,
           point_type: "POINT",
