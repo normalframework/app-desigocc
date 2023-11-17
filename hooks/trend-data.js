@@ -5,7 +5,7 @@ const batch_size = 500;
 const NAMESPACE = "fe927c12-7f2f-11ee-a65f-af8737c274cc"
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
+ 
 var token = ""
 
 /**
@@ -74,8 +74,9 @@ module.exports = async ({sdk, config, points}) => {
       let uuid = uuidv5(values.data[i].ObjectId, NAMESPACE)
       console.log(uuid, values.data[i].ObjectId, ts, real)
 
-      let res = await sdk.http.post("http://localhost:8080/api/v1/point/data", {
+      let res = await sdk.http.post(`http://${process.env.NFURL}/api/v1/point/data`, {
           uuid: uuid,
+          layer: "hpl:desigocc",
           values: [
               {
                   ts: val.Timestamp,

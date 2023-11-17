@@ -71,12 +71,14 @@ module.exports = async ({sdk, config}) => {
           layer: "hpl:desigocc",
           uuid: uuidv5(nodes[i].ObjectId, NAMESPACE),
           name: nodes[i].Name,
+          device_uuid: NAMESPACE,
           attrs: {
             "objectId": nodes[i].ObjectId,
             "designation": nodes[i].Designation,
-            "designationTokens": nodes[i].Designation.replace(/[\_\.]/g, " "),
+            "designationTokens": nodes[i].Designation.replace(/[\_\.]/g, " ") + " " +  nodes[i].ObjectId.replace(/[\_\.]/g, " "),
             "managedTypeName": nodes[i].Attributes.ManagedTypeName,
             "objectModelName": nodes[i].Attributes.ObjectModelName,
+            "systemName": nodes[i].Designation.split(":")[0],
           },
           protocol_id: nodes[i].ObjectId,
           point_type: "POINT",
@@ -88,7 +90,7 @@ module.exports = async ({sdk, config}) => {
     sdk.event(`Adding ${points.length} points`)
     added += points.length
     total += nodes.length
-    let res = await http.post("http://localhost:8080/api/v1/point/points", {
+    let res = await http.post(`http://${process.env.NFURL}/api/v1/point/points`, {
       "points": points,
     })
   }
