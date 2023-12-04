@@ -16,8 +16,7 @@
 	    "TEXT",
 	    "NUMERIC",
 	    "TEXT"
-	],
-	"default_extraction_attribute": "designation"
+	]
     },
     "options": [
 	{
