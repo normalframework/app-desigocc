@@ -17,9 +17,6 @@
 	    "NUMERIC",
 	    "TEXT"
 	],
-	"name_attribute": "designation",
-	"device_name_attribute": "systemName",
-	"object_id_attribute": "objectId",
 	"default_extraction_attribute": "designation"
     },
     "options": [
