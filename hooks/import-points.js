@@ -2,7 +2,7 @@ const NormalSdk = require("@normalframework/applications-sdk");
 const { v5: uuidv5 } = require("uuid");
 
 
-const batch_size = 100
+const batch_size = 10
 
 const NAMESPACE = "fe927c12-7f2f-11ee-a65f-af8737c274cc"
 
@@ -69,42 +69,59 @@ module.exports = async ({sdk, config}) => {
       "points": [ {
         layer: "hpl:desigocc",
         uuid: NAMESPACE,
-        device_uuid: NAMESPACE,
+        parent_uuid: NAMESPACE,
         name: config.baseUrl,
         point_type: "DEVICE"
-      }
+        }
       ]
     })
-
+    let object_ids = []
     for (let i = 0; i < nodes.length; i++) {
-      console.log(nodes[i].ObjectId)
-      if (nodes[i].Attributes.DefaultProperty == "Present_Value" || nodes[i].Attributes.DefaultProperty == "Value") {
-        let system_name =  nodes[i].Designation.split(":")[0]
-        points.push({
-          layer: "hpl:desigocc",
-          uuid: uuidv5(nodes[i].ObjectId, NAMESPACE),
-          name: nodes[i].Name,
-          device_uuid: NAMESPACE,
-          attrs: {
-            "objectId": nodes[i].ObjectId,
-            "designation": nodes[i].Designation,
-            "designationTokens": nodes[i].Designation.replace(/[\_\.]/g, " ") + " " +  nodes[i].ObjectId.replace(/[\_\.]/g, " "),
-            "managedTypeName": nodes[i].Attributes.ManagedTypeName,
-            "objectModelName": nodes[i].Attributes.ObjectModelName,
-            "systemName": system_name,
+      object_ids.push(nodes[i].ObjectId)
+    }
+    let prop_reply = await http.post(`${config.baseUrl}/properties?readAllProperties=True`, object_ids, {
+          headers: {
+            "authorization": "Bearer " + data.access_token
           },
-          protocol_id: nodes[i].ObjectId,
+          timeout: 15000,
+        })
+    for (let i = 0; i < prop_reply.data.length; i++) {
+      let point = prop_reply.data[i]
+
+      for (let j = 0; j < point.Properties.length; j++) {
+        let prop = point.Properties[j]
+        if (prop.Type == "ExtendedEnum" || prop.Type == "ExtendedReal") {
+          let system_name = nodes[i].Designation.split(":")[0]
+          let full_objectname = point.ObjectId + "." + prop.PropertyName
+          console.log(full_objectname)
+          points.push({
+            layer: "hpl:desigocc",
+            uuid: uuidv5(full_objectname, NAMESPACE),
+            name: nodes[i].Name + ":" + prop.PropertyName,
+            parent_uuid: NAMESPACE,
+            protocol_id: full_objectname,
+            attrs: {
+              "objectId": full_objectname,
+              "designation": nodes[i].Designation,
+              "designationTokens": nodes[i].Designation.replace(/[\_\.]/g, " ") + " " +  full_objectname.replace(/[\_\.\:]/g, " "),
+              "managedTypeName": nodes[i].Attributes.ManagedTypeName,
+              "objectModelName": nodes[i].Attributes.ObjectModelName,
+              "systemName": system_name,
+              "propertyName": prop.PropertyName,
+          },
           point_type: "POINT",
         })
-      } else {
-              console.log(nodes[i])
+        }
       }
     }
+  
     sdk.event(`Adding ${points.length} points`)
     added += points.length
     total += nodes.length
     let res = await http.post(`http://${process.env.NFURL}/api/v1/point/points`, {
       "points": points,
+    }, {
+      timeout: 15000
     })
   }
   sdk.event(`finsihed import. ${added}/${total} imported`)

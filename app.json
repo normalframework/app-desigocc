@@ -8,14 +8,16 @@
 	    "attr_objectModelName",
 	    "attr_designation",
 	    "period",
-	    "attr_designationTokens"
+	    "attr_designationTokens",
+	    "attr_systemName"
 	],
 	"component_options": [
 	    "TAG",
 	    "TAG",
 	    "TEXT",
 	    "NUMERIC",
-	    "TEXT"
+	    "TEXT",
+	    "TAG"
 	]
     },
     "options": [

@@ -59,6 +59,7 @@ module.exports = async ({sdk, config, points}) => {
     sdk.event(`Processing ${values.data.length} values` )
 
       for (let i = 0; i < values.data.length; i ++) {
+        console.log(values.data[i])
         let val = values.data[i].Value
         //  console.log(values.data[i])
         if (!val.QualityGood) {
@@ -71,8 +72,8 @@ module.exports = async ({sdk, config, points}) => {
       } catch {
           continue
       }
-      let uuid = uuidv5(values.data[i].ObjectId, NAMESPACE)
-      console.log(uuid, values.data[i].ObjectId, ts, real)
+      let uuid = uuidv5(values.data[i].OriginalObjectOrPropertyId, NAMESPACE)
+      console.log(uuid, values.data[i].OriginalObjectOrPropertyId, ts, real)
 
       let res = await sdk.http.post(`http://${process.env.NFURL}/api/v1/point/data`, {
           uuid: uuid,
