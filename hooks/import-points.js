@@ -2,13 +2,14 @@ const NormalSdk = require("@normalframework/applications-sdk");
 const { v5: uuidv5 } = require("uuid");
 
 
-const batch_size = 10
+const batch_size = 100;
 
 const NAMESPACE = "fe927c12-7f2f-11ee-a65f-af8737c274cc"
-
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
- 
+function isValueName(name) {
+  return name == "Value" || name == "Present_Value";
+} 
 
 /**
  * Invoke hook function
@@ -85,11 +86,22 @@ module.exports = async ({sdk, config}) => {
           },
           timeout: 15000,
         })
+    let has_value = false;
     for (let i = 0; i < prop_reply.data.length; i++) {
       let point = prop_reply.data[i]
-
+      // check if this point has a value or present_value 
       for (let j = 0; j < point.Properties.length; j++) {
         let prop = point.Properties[j]
+        if (isValueName(prop.PropertyName)) {
+          has_value = true;
+        }
+      }
+      for (let j = 0; j < point.Properties.length; j++) {
+        let prop = point.Properties[j]
+
+        if (has_value && !isValueName(prop.PropertyName)) {
+          continue
+        }
         if (prop.Type == "ExtendedEnum" || prop.Type == "ExtendedReal") {
           let system_name = nodes[i].Designation.split(":")[0]
           let full_objectname = point.ObjectId + "." + prop.PropertyName
@@ -118,11 +130,14 @@ module.exports = async ({sdk, config}) => {
     sdk.event(`Adding ${points.length} points`)
     added += points.length
     total += nodes.length
-    let res = await http.post(`http://${process.env.NFURL}/api/v1/point/points`, {
-      "points": points,
-    }, {
-      timeout: 15000
-    })
+    // also batch updates to Point.
+    for (let j = 0; j < points.length; j += batch_size) {
+      let res = await http.post(`http://${process.env.NFURL}/api/v1/point/points`, {
+        "points": points.slice(j, j+batch_size),
+      }, {
+        timeout: 30000,
+      })
+    }
   }
   sdk.event(`finsihed import. ${added}/${total} imported`)
 };
