@@ -4,21 +4,20 @@
 	"name": "hpl:desigocc",
 	"indexed": true,
 	"components": [
-	    "attr_objectId",
-	    "attr_objectModelName",
-	    "attr_designation",
-	    "period",
-	    "attr_designationTokens",
-	    "attr_systemName"
+	    "objectId",
+	    "objectModelName",
+	    "designation",
+	    "designationTokens",
+	    "systemName"
 	],
 	"component_options": [
 	    "TAG",
 	    "TAG",
 	    "TEXT",
-	    "NUMERIC",
 	    "TEXT",
 	    "TAG"
-	]
+	],
+	"default_display_attrs": ["systemName", "objectId", "designation"]
     },
     "options": [
 	{
