@@ -7,13 +7,15 @@
 	    "objectId",
 	    "objectModelName",
 	    "designation",
+	    "designation",
 	    "designationTokens",
 	    "systemName"
 	],
 	"component_options": [
 	    "TAG",
 	    "TAG",
-	    "TEXT",
+	    "PATH separator .",
+	    "AS designation_text TEXT NOSTEM",
 	    "TEXT",
 	    "TAG"
 	],
