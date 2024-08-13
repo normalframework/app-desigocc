@@ -1,5 +1,6 @@
 const NormalSdk = require("@normalframework/applications-sdk");
 const { v5: uuidv5 } = require("uuid");
+const axios = require("axios");
 
 const batch_size = 500;
 const NAMESPACE = "fe927c12-7f2f-11ee-a65f-af8737c274cc"
@@ -14,7 +15,7 @@ var token = ""
  * @returns {NormalSdk.InvokeResult}
  */
 module.exports = async ({sdk, config, points}) => {
-  http = sdk.http;
+  http = axios;
 
   if (!config.username || !config.password || !config.baseUrl) {
     return NormalSdk.InvokeError("missing username, password, or base url")
@@ -56,7 +57,7 @@ module.exports = async ({sdk, config, points}) => {
         },
           timeout: 15000,
     })
-    sdk.event(`Processing ${values.data.length} values` )
+    sdk.logEvent(`Processing ${values.data.length} values` )
 
       for (let i = 0; i < values.data.length; i ++) {
         console.log(values.data[i])
@@ -89,5 +90,5 @@ module.exports = async ({sdk, config, points}) => {
 
     }
   }
-  sdk.event(`Polling finished with ${total_updates} new values`)
+  sdk.logEvent(`Polling finished with ${total_updates} new values`)
 }
