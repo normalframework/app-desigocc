@@ -1,6 +1,6 @@
 const NormalSdk = require("@normalframework/applications-sdk");
 const { v5: uuidv5 } = require("uuid");
-
+const axios = require("axios");
 
 const batch_size = 100;
 
@@ -17,7 +17,7 @@ function isValueName(name) {
  * @returns {NormalSdk.InvokeResult}
  */
 module.exports = async ({sdk, config}) => {
-  http = sdk.http;
+  http = axios;
 
   if (!config.username || !config.password || !config.baseUrl) {
     return NormalSdk.InvokeError("missing username, password, or base url")
@@ -37,16 +37,16 @@ module.exports = async ({sdk, config}) => {
   })
 
   if (!config.viewId || !config.systemId) {
-    sdk.event("Desigo view ID is not configured.  Loading the available system views!")
+    sdk.logEvent("Desigo view ID is not configured.  Loading the available system views!")
     let views = await http.get(config.baseUrl+"/systembrowser", {
       headers: {
         "authorization": "Bearer " + data.access_token
     },
     })
     for (let i = 0; i < views.data.length; i ++) {
-      sdk.event(`view systemId=${views.data[i].SystemId} viewId=${views.data[i].ViewId} descriptor=${views.data[i].Descriptor} designation=${views.data[i].Designation}`)
+      sdk.logEvent(`view systemId=${views.data[i].SystemId} viewId=${views.data[i].ViewId} descriptor=${views.data[i].Descriptor} designation=${views.data[i].Designation}`)
     }
-    sdk.event("Please select a systemId and viewId and update the configuration.")
+    sdk.logEvent("Please select a systemId and viewId and update the configuration.")
     return
   }
   let total = 0
@@ -127,7 +127,7 @@ module.exports = async ({sdk, config}) => {
       }
     }
   
-    sdk.event(`Adding ${points.length} points`)
+    sdk.logEvent(`Adding ${points.length} points`)
     added += points.length
     total += nodes.length
     // also batch updates to Point.
@@ -139,5 +139,5 @@ module.exports = async ({sdk, config}) => {
       })
     }
   }
-  sdk.event(`finsihed import. ${added}/${total} imported`)
+  sdk.logEvent(`finsihed import. ${added}/${total} imported`)
 };
