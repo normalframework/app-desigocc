@@ -86,8 +86,8 @@ module.exports = async ({sdk, config}) => {
           },
           timeout: 15000,
         })
-    let has_value = false;
     for (let i = 0; i < prop_reply.data.length; i++) {
+      let has_value = false;
       let point = prop_reply.data[i]
       // check if this point has a value or present_value 
       for (let j = 0; j < point.Properties.length; j++) {
