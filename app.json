@@ -7,7 +7,6 @@
 	    "objectId",
 	    "objectModelName",
 	    "designation",
-	    "designation",
 	    "designationTokens",
 	    "systemName"
 	],
@@ -16,7 +15,6 @@
 	    "TAG",
 	    "PATH separator .",
 	    "AS designation_text TEXT NOSTEM",
-	    "TEXT",
 	    "TAG"
 	],
 	"default_display_attrs": ["systemName", "objectId", "designation"]
