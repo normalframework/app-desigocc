@@ -8,6 +8,7 @@ const NAMESPACE = "fe927c12-7f2f-11ee-a65f-af8737c274cc"
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
  
 var token = ""
+var expirationTime = 0
 
 /**
  * Invoke hook function
@@ -22,7 +23,8 @@ module.exports = async ({sdk, config, points}) => {
   }
   config.baseUrl = config.baseUrl.replace(/\/+$/gm, '')
   console.log(config) 
-  if (token == "") {
+  console.log(Date.now(), expirationTime)
+  if (token == "" || expirationTime - Date.now() < 15 * 60 * 1000) {
     try{
       const { data } = await http.post(config.baseUrl + "/token", {
         grant_type: "password",
@@ -34,7 +36,8 @@ module.exports = async ({sdk, config, points}) => {
           },
           timeout: 15000,
     });
-        token=data.access_token 
+    token=data.access_token ;
+    expirationTime = Date.now() + data.expires_in;
     console.log(data)
 
     } catch (e) {
@@ -52,11 +55,20 @@ module.exports = async ({sdk, config, points}) => {
 
   let total_updates = 0
   for (let i = 0; i < object_ids.length; i += batch_size) {
-    let values = await http.post(config.baseUrl+"/values", object_ids.slice(i, i+batch_size), { headers: {
+    var values;
+    try {
+     values = await http.post(config.baseUrl+"/values", object_ids.slice(i, i+batch_size), { headers: {
           "authorization": "Bearer " + token
         },
           timeout: 15000,
     })
+   } catch  (error) {
+  if (error.response && error.response.status === 401) {
+    token = ""
+    sdk.logEvent("received 401.  clearing token")
+    return NormalSdk.InvokeError
+  }   
+    }
     sdk.logEvent(`Processing ${values.data.length} values` )
 
       for (let i = 0; i < values.data.length; i ++) {

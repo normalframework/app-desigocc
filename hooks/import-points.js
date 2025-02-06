@@ -32,7 +32,7 @@ module.exports = async ({sdk, config}) => {
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded'
     },
-          timeout: 15000,
+          timeout: 150000,
 
   })
 
@@ -62,7 +62,7 @@ module.exports = async ({sdk, config}) => {
 
     let nodes = views.data.Nodes
     let points = []
-    if (!nodes || nodes.length == 0) {
+    if (nodes.length == 0) {
       break
     }
     // create a device point so Device Health will work
@@ -86,13 +86,9 @@ module.exports = async ({sdk, config}) => {
           },
           timeout: 15000,
         })
-    if (prop_reply && prop_reply.data && prop_reply.data.length) {
-      for (let i = 0; i < prop_reply.data.length; i++) {
+    for (let i = 0; i < prop_reply.data.length; i++) {
       let has_value = false;
       let point = prop_reply.data[i]
-      if (!point || !point.Properties || !point.Properties.length) {
-        continue
-      }
       // check if this point has a value or present_value 
       for (let j = 0; j < point.Properties.length; j++) {
         let prop = point.Properties[j]
@@ -129,9 +125,8 @@ module.exports = async ({sdk, config}) => {
         })
         }
       }
-      }
     }
-
+  
     sdk.logEvent(`Adding ${points.length} points`)
     added += points.length
     total += nodes.length

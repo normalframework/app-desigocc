@@ -1,51 +1,56 @@
 {
-    "name": "Desigo CC NORIS API Driver",
-    "layer": {
-	"name": "hpl:desigocc",
-	"indexed": true,
-	"components": [
-	    "objectId",
-	    "objectModelName",
-	    "designation",
-	    "designationTokens",
-	    "systemName"
-	],
-	"component_options": [
-	    "TAG",
-	    "TAG",
-	    "PATH separator .",
-	    "AS designation_text TEXT NOSTEM",
-	    "TAG"
-	],
-	"default_display_attrs": ["systemName", "objectId", "designation"]
+  "name":  "Desigo CC NORIS API Driver",
+  "options":  [
+    {
+      "name":  "baseUrl",
+      "optionType":  "TYPE_STRING",
+      "required":  true
     },
-    "options": [
-	{
-	    "name": "baseUrl",
-	    "option_type": "TYPE_STRING",
-	    "required": true
-	},
-	{
-	    "name": "username",
-	    "option_type": "TYPE_STRING",
-	    "required": true
-	},
-	{
-	    "name": "password",
-	    "option_type": "TYPE_STRING",
-	    "required": true,
-	    "secret": true
-	},
-	{
-	    "name": "systemId",
-	    "option_type": "TYPE_SIGNED",
-	    "default_value": {
-		"signed": 1
-	    }
-	},
-	{
-	    "name": "viewId",
-	    "option_type": "TYPE_SIGNED"
-	}
+    {
+      "name":  "username",
+      "optionType":  "TYPE_STRING",
+      "required":  true
+    },
+    {
+      "name":  "password",
+      "optionType":  "TYPE_STRING",
+      "secret":  true,
+      "required":  true
+    },
+    {
+      "name":  "systemId",
+      "optionType":  "TYPE_SIGNED",
+      "defaultValue":  {
+        "signed":  1
+      }
+    },
+    {
+      "name":  "viewId",
+      "optionType":  "TYPE_SIGNED"
+    }
+  ],
+  "layer":  {
+    "name":  "hpl:desigocc",
+    "components":  [
+      "objectId",
+      "objectModelName",
+      "designation",
+      "designationTokens",
+      "systemName"
+    ],
+    "componentOptions":  [
+      "TAG",
+      "TAG",
+      "PATH separator .",
+      "AS designation_text TEXT NOSTEM",
+      "TAG"
+    ],
+    "indexed":  true,
+    "defaultDisplayAttrs":  [
+      "systemName",
+      "objectId",
+      "designation"
     ]
+  },
+  "minNfVersion":  "3.8.1-0"
 }

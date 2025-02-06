@@ -1,19 +1,54 @@
 {
-    "hook": {
-	"id":"d34db042-8608-40cc-a667-46f3eb328ef8",
-	"name":"trend-data",
-	"entryPoint":"/hooks/trend-data.js",
-	"points":{
-	    "layer":"hpl:desigocc",
-	    "query":{"or":[
-		{"field":{"property":"period","numeric":{"minValue":30,"maxValue":30}}},
-		{"field":{"property":"period","numeric":{"minValue":300,"maxValue":300}}},
-		{"field":{"property":"period","numeric":{"minValue":60,"maxValue":60}}},
-		{"field":{"property":"period","numeric":{"minValue":900,"maxValue":900}}}]
-		    },
-	    "labelAttribute":"attrs.designation"},
-	"schedule":{"rrule":"DTSTART:20231111T050000Z\nRRULE:FREQ=MINUTELY;INTERVAL=1"},
-	"mode":"MODE_SCHEDULED",
-	"invokeTimeout":"60s"
-    }
+  "id":  "d34db042-8608-40cc-a667-46f3eb328ef8",
+  "name":  "trend-data",
+  "entryPoint":  "/hooks/trend-data.js",
+  "points":  {
+    "layer":  "hpl:desigocc",
+    "query":  {
+      "or":  [
+        {
+          "field":  {
+            "property":  "period",
+            "numeric":  {
+              "minValue":  30,
+              "maxValue":  30
+            }
+          }
+        },
+        {
+          "field":  {
+            "property":  "period",
+            "numeric":  {
+              "minValue":  300,
+              "maxValue":  300
+            }
+          }
+        },
+        {
+          "field":  {
+            "property":  "period",
+            "numeric":  {
+              "minValue":  60,
+              "maxValue":  60
+            }
+          }
+        },
+        {
+          "field":  {
+            "property":  "period",
+            "numeric":  {
+              "minValue":  900,
+              "maxValue":  900
+            }
+          }
+        }
+      ]
+    },
+    "labelAttribute":  "attrs.designation"
+  },
+  "schedule":  {
+    "rrule":  "DTSTART:20231111T050000Z\nRRULE:FREQ=MINUTELY;INTERVAL=15"
+  },
+  "mode":  "MODE_SCHEDULED",
+  "invokeTimeout":  "900s"
 }

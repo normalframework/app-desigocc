@@ -1,0 +1,156 @@
+0 verbose cli node /bin/npm
+1 info using npm@9.5.1
+2 info using node@v18.16.1
+3 verbose node symlink /bin/node
+4 timing npm:load:whichnode Completed in 4ms
+5 timing config:load:defaults Completed in 3ms
+6 timing config:load:file:/lib/node_modules/npm/npmrc Completed in 1ms
+7 timing config:load:builtin Completed in 1ms
+8 timing config:load:cli Completed in 3ms
+9 timing config:load:env Completed in 0ms
+10 timing config:load:project Completed in 6ms
+11 timing config:load:file:/app/.npmrc Completed in 0ms
+12 timing config:load:user Completed in 1ms
+13 timing config:load:file:/etc/npmrc Completed in 0ms
+14 timing config:load:global Completed in 0ms
+15 timing config:load:setEnvs Completed in 2ms
+16 timing config:load Completed in 18ms
+17 timing npm:load:configload Completed in 19ms
+18 timing npm:load:mkdirpcache Completed in 0ms
+19 timing npm:load:mkdirplogs Completed in 0ms
+20 verbose title npm install npm@9.6.7
+21 verbose argv "install" "--global" "npm@9.6.7"
+22 timing npm:load:setTitle Completed in 2ms
+23 timing config:load:flatten Completed in 5ms
+24 timing npm:load:display Completed in 6ms
+25 verbose logfile logs-max:10 dir:/app/.npm/_logs/2025-02-03T23_58_51_347Z-
+26 verbose logfile /app/.npm/_logs/2025-02-03T23_58_51_347Z-debug-0.log
+27 timing npm:load:logFile Completed in 8ms
+28 timing npm:load:timers Completed in 1ms
+29 timing npm:load:configScope Completed in 0ms
+30 timing npm:load Completed in 41ms
+31 timing config:load:flatten Completed in 1ms
+32 silly logfile done cleaning log files
+33 http fetch GET 200 https://registry.npmjs.org/npm 208ms (cache miss)
+34 timing arborist:ctor Completed in 1ms
+35 timing idealTree:init Completed in 8ms
+36 timing idealTree:userRequests Completed in 2ms
+37 silly idealTree buildDeps
+38 silly fetch manifest npm@9.6.7
+39 http fetch GET 200 https://registry.npmjs.org/npm 23ms (cache hit)
+40 silly placeDep ROOT npm@9.6.7 OK for:  want: 9.6.7
+41 timing idealTree:#root Completed in 64ms
+42 timing idealTree:node_modules/npm Completed in 0ms
+43 timing idealTree:buildDeps Completed in 67ms
+44 timing idealTree:fixDepFlags Completed in 1ms
+45 timing idealTree Completed in 80ms
+46 timing reify:loadTrees Completed in 366ms
+47 timing reify:diffTrees Completed in 7ms
+48 silly reify mark retired [ '/lib/node_modules/npm', '/bin/npm', '/bin/npx' ]
+49 silly reify moves {
+49 silly reify   '/lib/node_modules/npm': '/lib/node_modules/.npm-uVOgyzLu',
+49 silly reify   '/bin/npm': '/bin/.npm-bDLRM6pI',
+49 silly reify   '/bin/npx': '/bin/.npx-8ZQKUI9c'
+49 silly reify }
+50 timing reify:retireShallow Completed in 6ms
+51 timing reify:createSparse Completed in 0ms
+52 silly tarball no local data for npm@https://registry.npmjs.org/npm/-/npm-9.6.7.tgz. Extracting by manifest.
+53 http fetch GET 200 https://registry.npmjs.org/npm/-/npm-9.6.7.tgz 1757ms (cache miss)
+54 timing reifyNode:node_modules/npm Completed in 1766ms
+55 timing arborist:ctor Completed in 0ms
+56 timing reify:diffTrees Completed in 10ms
+57 timing reify:loadBundles Completed in 2193ms
+58 timing reify:unpack Completed in 1ms
+59 timing reify:unretire Completed in 2ms
+60 timing build:queue Completed in 19ms
+61 timing build:link:node_modules/npm/node_modules/@npmcli/arborist Completed in 8ms
+62 timing build:link:node_modules/npm/node_modules/cross-spawn/node_modules/which Completed in 6ms
+63 timing build:link:node_modules/npm/node_modules/node-gyp/node_modules/nopt Completed in 7ms
+64 timing build:link:node_modules/npm Completed in 10ms
+65 timing build:link:node_modules/npm/node_modules/@npmcli/installed-package-contents Completed in 9ms
+66 timing build:link:node_modules/npm/node_modules/cssesc Completed in 8ms
+67 timing build:link:node_modules/npm/node_modules/glob Completed in 8ms
+68 timing build:link:node_modules/npm/node_modules/mkdirp Completed in 8ms
+69 timing build:link:node_modules/npm/node_modules/color-support Completed in 8ms
+70 timing build:link:node_modules/npm/node_modules/node-gyp Completed in 8ms
+71 timing build:link:node_modules/npm/node_modules/pacote Completed in 8ms
+72 timing build:link:node_modules/npm/node_modules/nopt Completed in 8ms
+73 timing build:link:node_modules/npm/node_modules/qrcode-terminal Completed in 7ms
+74 timing build:link:node_modules/npm/node_modules/rimraf Completed in 7ms
+75 timing build:link:node_modules/npm/node_modules/semver Completed in 7ms
+76 timing build:link:node_modules/npm/node_modules/sigstore Completed in 7ms
+77 timing build:link:node_modules/npm/node_modules/which Completed in 7ms
+78 timing build:link:node_modules/npm/node_modules/node-gyp/node_modules/which Completed in 7ms
+79 timing build:link Completed in 10ms
+80 timing build:deps Completed in 29ms
+81 timing build Completed in 29ms
+82 timing reify:build Completed in 31ms
+83 timing reify:trash Completed in 89ms
+84 timing reify Completed in 2702ms
+85 silly CHANGE node_modules/npm
+86 silly CHANGE node_modules/npm/node_modules/@npmcli/run-script
+87 silly CHANGE node_modules/npm/node_modules/@npmcli/package-json
+88 silly CHANGE node_modules/npm/node_modules/@npmcli/map-workspaces
+89 silly CHANGE node_modules/npm/node_modules/@npmcli/metavuln-calculator
+90 silly CHANGE node_modules/npm/node_modules/@npmcli/installed-package-contents
+91 silly CHANGE node_modules/npm/node_modules/@npmcli/config
+92 silly CHANGE node_modules/npm/node_modules/@npmcli/git
+93 silly CHANGE node_modules/npm/node_modules/@npmcli/arborist
+94 silly CHANGE node_modules/npm/node_modules/write-file-atomic
+95 silly CHANGE node_modules/npm/node_modules/which
+96 silly CHANGE node_modules/npm/node_modules/walk-up-path
+97 silly CHANGE node_modules/npm/node_modules/tuf-js
+98 silly CHANGE node_modules/npm/node_modules/tar
+99 silly CHANGE node_modules/npm/node_modules/ssri
+100 silly CHANGE node_modules/npm/node_modules/spdx-license-ids
+101 silly CHANGE node_modules/npm/node_modules/spdx-correct
+102 silly CHANGE node_modules/npm/node_modules/sigstore
+103 silly CHANGE node_modules/npm/node_modules/signal-exit
+104 silly CHANGE node_modules/npm/node_modules/semver
+105 silly CHANGE node_modules/npm/node_modules/rimraf
+106 silly CHANGE node_modules/npm/node_modules/read-package-json
+107 silly CHANGE node_modules/npm/node_modules/readable-stream
+108 silly CHANGE node_modules/npm/node_modules/read
+109 silly CHANGE node_modules/npm/node_modules/qrcode-terminal
+110 silly CHANGE node_modules/npm/node_modules/promise-call-limit
+111 silly CHANGE node_modules/npm/node_modules/postcss-selector-parser
+112 silly CHANGE node_modules/npm/node_modules/parse-conflict-json
+113 silly CHANGE node_modules/npm/node_modules/pacote
+114 silly CHANGE node_modules/npm/node_modules/npm-registry-fetch
+115 silly CHANGE node_modules/npm/node_modules/npm-normalize-package-bin
+116 silly CHANGE node_modules/npm/node_modules/npm-install-checks
+117 silly CHANGE node_modules/npm/node_modules/node-gyp
+118 silly CHANGE node_modules/npm/node_modules/node-gyp/node_modules/which
+119 silly CHANGE node_modules/npm/node_modules/node-gyp/node_modules/readable-stream
+120 silly CHANGE node_modules/npm/node_modules/node-gyp/node_modules/nopt
+121 silly CHANGE node_modules/npm/node_modules/nopt
+122 silly CHANGE node_modules/npm/node_modules/mkdirp
+123 silly CHANGE node_modules/npm/node_modules/minipass-fetch
+124 silly CHANGE node_modules/npm/node_modules/minipass
+125 silly CHANGE node_modules/npm/node_modules/make-fetch-happen
+126 silly CHANGE node_modules/npm/node_modules/minimatch
+127 silly CHANGE node_modules/npm/node_modules/lru-cache
+128 silly CHANGE node_modules/npm/node_modules/libnpmpublish
+129 silly CHANGE node_modules/npm/node_modules/libnpmpack
+130 silly CHANGE node_modules/npm/node_modules/libnpmorg
+131 silly CHANGE node_modules/npm/node_modules/libnpmfund
+132 silly CHANGE node_modules/npm/node_modules/libnpmexec
+133 silly CHANGE node_modules/npm/node_modules/libnpmdiff
+134 silly CHANGE node_modules/npm/node_modules/just-diff
+135 silly CHANGE node_modules/npm/node_modules/is-core-module
+136 silly CHANGE node_modules/npm/node_modules/ignore-walk
+137 silly CHANGE node_modules/npm/node_modules/ini
+138 silly CHANGE node_modules/npm/node_modules/graceful-fs
+139 silly CHANGE node_modules/npm/node_modules/glob
+140 silly REMOVE node_modules/npm/node_modules/glob/node_modules/minimatch
+141 silly CHANGE node_modules/npm/node_modules/gauge
+142 silly CHANGE node_modules/npm/node_modules/fs-minipass
+143 silly CHANGE node_modules/npm/node_modules/depd
+144 silly CHANGE node_modules/npm/node_modules/cssesc
+145 silly CHANGE node_modules/npm/node_modules/color-support
+146 silly CHANGE node_modules/npm/node_modules/cacache
+147 silly CHANGE node_modules/npm/node_modules/agentkeepalive
+148 timing command:install Completed in 2978ms
+149 verbose exit 0
+150 timing npm Completed in 3038ms
+151 info ok
