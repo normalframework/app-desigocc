@@ -44,11 +44,12 @@
         }
       ]
     },
+    "groups":  {},
     "labelAttribute":  "attrs.designation"
   },
   "schedule":  {
     "rrule":  "DTSTART:20231111T050000Z\nRRULE:FREQ=MINUTELY;INTERVAL=15"
   },
   "mode":  "MODE_SCHEDULED",
-  "invokeTimeout":  "900s"
+  "invokeTimeout":  "4500s"
 }

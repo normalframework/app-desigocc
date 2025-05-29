@@ -106,11 +106,16 @@ module.exports = async ({sdk, config}) => {
           let system_name = nodes[i].Designation.split(":")[0]
           let full_objectname = point.ObjectId + "." + prop.PropertyName
           console.log(full_objectname)
+          if (nodes[i].Attributes.ManagedTypeName == "TrendLog") continue;
+          if (nodes[i].Attributes.ManagedTypeName == "BACnet Notification Class") continue;
+          if (nodes[i].Attributes.ManagedTypeName == "BACnet Event Enrollment") continue;
+          if (nodes[i].Attributes.ManagedTypeName == "TextGroup") continue;
           points.push({
             layer: "hpl:desigocc",
             uuid: uuidv5(full_objectname, NAMESPACE),
             name: nodes[i].Name + ":" + prop.PropertyName,
             parent_uuid: NAMESPACE,
+            parent_name: system_name,
             protocol_id: full_objectname,
             attrs: {
               "objectId": full_objectname,

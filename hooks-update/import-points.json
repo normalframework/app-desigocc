@@ -2,5 +2,5 @@
   "id":  "cfe838c9-270d-4c2b-a916-97c762b9a27c",
   "name":  "import-points",
   "entryPoint":  "/hooks/import-points.js",
-  "invokeTimeout":  "9300s"
+  "invokeTimeout":  "12900s"
 }

@@ -31,25 +31,39 @@
   ],
   "layer":  {
     "name":  "hpl:desigocc",
-    "components":  [
-      "objectId",
-      "objectModelName",
-      "designation",
-      "designationTokens",
-      "systemName"
-    ],
-    "componentOptions":  [
-      "TAG",
-      "TAG",
-      "PATH separator .",
-      "AS designation_text TEXT NOSTEM",
-      "TAG"
-    ],
     "indexed":  true,
     "defaultDisplayAttrs":  [
       "systemName",
       "objectId",
       "designation"
+    ],
+    "structuredComponents":  [
+      {
+        "name":  "objectId",
+        "type":  "TAG"
+      },
+      {
+        "name":  "objectModelName",
+        "type":  "TAG"
+      },
+      {
+        "name":  "designation",
+        "type":  "TAG"
+      },
+      {
+        "name":  "designationTokens",
+        "options":  [
+          "AS designation_text TEXT NOSTEM"
+        ]
+      },
+      {
+        "name":  "systemName",
+        "type":  "TAG"
+      },
+      {
+        "name":  "managedTypeName",
+        "type":  "TAG"
+      }
     ]
   },
   "minNfVersion":  "3.8.1-0"
