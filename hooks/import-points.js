@@ -117,6 +117,7 @@ module.exports = async ({sdk, config}) => {
             parent_uuid: NAMESPACE,
             parent_name: system_name,
             protocol_id: full_objectname,
+            hpl_driver: "hpl:desigocc",
             attrs: {
               "objectId": full_objectname,
               "designation": nodes[i].Designation,

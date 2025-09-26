@@ -1,70 +1,73 @@
 {
-  "name":  "Desigo CC NORIS API Driver",
-  "options":  [
+  "name": "Desigo CC NORIS API Driver",
+  "options": [
     {
-      "name":  "baseUrl",
-      "optionType":  "TYPE_STRING",
-      "required":  true
+      "name": "baseUrl",
+      "optionType": "TYPE_STRING",
+      "required": true
     },
     {
-      "name":  "username",
-      "optionType":  "TYPE_STRING",
-      "required":  true
+      "name": "username",
+      "optionType": "TYPE_STRING",
+      "required": true
     },
     {
-      "name":  "password",
-      "optionType":  "TYPE_STRING",
-      "secret":  true,
-      "required":  true
+      "name": "password",
+      "optionType": "TYPE_STRING",
+      "secret": true,
+      "required": true
     },
     {
-      "name":  "systemId",
-      "optionType":  "TYPE_SIGNED",
-      "defaultValue":  {
-        "signed":  1
+      "name": "systemId",
+      "optionType": "TYPE_SIGNED",
+      "defaultValue": {
+        "signed": 1
       }
     },
     {
-      "name":  "viewId",
-      "optionType":  "TYPE_SIGNED"
+      "name": "viewId",
+      "optionType": "TYPE_SIGNED"
     }
   ],
-  "layer":  {
-    "name":  "hpl:desigocc",
-    "indexed":  true,
-    "defaultDisplayAttrs":  [
+  "layer": {
+    "name": "hpl:desigocc",
+    "indexed": true,
+    "defaultDisplayAttrs": [
       "systemName",
       "objectId",
       "designation"
     ],
-    "structuredComponents":  [
+    "structuredComponents": [
       {
-        "name":  "objectId",
-        "type":  "TAG"
+        "name": "objectId",
+        "type": "TAG"
       },
       {
-        "name":  "objectModelName",
-        "type":  "TAG"
+        "name": "objectModelName",
+        "type": "TAG"
       },
       {
-        "name":  "designation",
-        "type":  "TAG"
+        "name": "designation",
+        "type": "TAG"
       },
       {
-        "name":  "designationTokens",
-        "options":  [
+        "name": "designationTokens",
+        "options": [
           "AS designation_text TEXT NOSTEM"
         ]
       },
       {
-        "name":  "systemName",
-        "type":  "TAG"
+        "name": "systemName",
+        "type": "TAG"
       },
       {
-        "name":  "managedTypeName",
-        "type":  "TAG"
+        "name": "managedTypeName",
+        "type": "TAG"
       }
-    ]
+    ],
+    "driver": {
+      "grpcService": "localhost:10002"
+    }
   },
-  "minNfVersion":  "3.8.1-0"
+  "minNfVersion": "3.8.4-1"
 }

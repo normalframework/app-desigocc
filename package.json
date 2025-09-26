@@ -10,9 +10,13 @@
     "deploy": "npx applications-sdk deploy"
   },
   "dependencies": {
-    "@normalframework/applications-sdk": "0.1.86",
+    "@normalframework/applications-sdk": "0.1.96",
     "pg": "^8.11.0",
-    "typescript": "^5.0.2"
+    "typescript": "^5.0.2",
+    "uuid": "*",
+    "@grpc/grpc-js": "*",
+      "@buf/normalframework_nf.grpc_node": "1.13.0-20250528015943-bda79e821714.1"
+
   },
   "author": "",
   "license": "ISC"
