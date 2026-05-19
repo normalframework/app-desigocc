@@ -413,51 +413,7 @@ module.exports = async ({ sdk, config, args }) => {
         sdk.logEvent(`reset_cache removed ${removed} file(s)`);
         return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, removed }));
       }
-      case "raw_post": {
-        const p = args.path || "";
-        if (!p) return NormalSdk.InvokeError("raw_post requires path");
-        const body = args.body ? JSON.parse(args.body) : {};
-        const fullUrl = `${config.baseUrl}/${p.replace(/^\/+/, "")}`;
-        const out = await withFreshToken(http, config, sdk, async (token) => {
-          const resp = await http.post(fullUrl, body, {
-            headers: { authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-            timeout: 30000,
-            httpsAgent: norisHttpsAgent,
-          });
-          return resp.data;
-        });
-        return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, data: out }));
-      }
-      case "raw_get": {
-        // DEBUG: pass through arbitrary WSI path (relative to baseUrl) and return raw JSON.
-        const p = args.path || "";
-        if (!p) return NormalSdk.InvokeError("raw_get requires path");
-        const fullUrl = `${config.baseUrl}/${p.replace(/^\/+/, "")}`;
-        const out = await withFreshToken(http, config, sdk, async (token) => {
-          const resp = await http.get(fullUrl, {
-            headers: { authorization: `Bearer ${token}` },
-            timeout: 30000,
-            httpsAgent: norisHttpsAgent,
-          });
-          return resp.data;
-        });
-        return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, data: out }));
-      }
-      case "raw_properties": {
-        // DEBUG: return UNFILTERED /properties response for one ObjectId.
-        const objectId = args.objectId;
-        if (!objectId) return NormalSdk.InvokeError("raw_properties requires objectId");
-        const data = await withFreshToken(http, config, sdk, async (token) => {
-          const resp = await http.post(
-            `${config.baseUrl}/properties?readAllProperties=True`,
-            [objectId],
-            { headers: { authorization: `Bearer ${token}` }, timeout: 20000, httpsAgent: norisHttpsAgent }
-          );
-          return resp.data || [];
-        });
-        return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, data }));
-      }
-      case "download_program": {
+case "download_program": {
         const objectId = args.objectId;
         if (!objectId) return NormalSdk.InvokeError("download_program requires objectId");
         const values = await withFreshToken(http, config, sdk, async (token) => {
