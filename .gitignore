@@ -2,3 +2,5 @@
 *.js.map
 node_modules
 .npm/
+state/
+.DS_Store

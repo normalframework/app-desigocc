@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Desigo Discovery</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              border: "hsl(var(--border))",
+              input: "hsl(var(--input))",
+              ring: "hsl(var(--ring))",
+              background: "hsl(var(--background))",
+              foreground: "hsl(var(--foreground))",
+              primary: { DEFAULT: "hsl(var(--primary))", foreground: "hsl(var(--primary-foreground))" },
+              secondary: { DEFAULT: "hsl(var(--secondary))", foreground: "hsl(var(--secondary-foreground))" },
+              destructive: { DEFAULT: "hsl(var(--destructive))", foreground: "hsl(var(--destructive-foreground))" },
+              muted: { DEFAULT: "hsl(var(--muted))", foreground: "hsl(var(--muted-foreground))" },
+              accent: { DEFAULT: "hsl(var(--accent))", foreground: "hsl(var(--accent-foreground))" },
+              popover: { DEFAULT: "hsl(var(--popover))", foreground: "hsl(var(--popover-foreground))" },
+              card: { DEFAULT: "hsl(var(--card))", foreground: "hsl(var(--card-foreground))" },
+            },
+            borderRadius: {
+              lg: "var(--radius)",
+              md: "calc(var(--radius) - 2px)",
+              sm: "calc(var(--radius) - 4px)",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      :root {
+        --background: 0 0% 100%; --foreground: 222.2 84% 4.9%;
+        --card: 0 0% 100%; --card-foreground: 222.2 84% 4.9%;
+        --popover: 0 0% 100%; --popover-foreground: 222.2 84% 4.9%;
+        --primary: 237.58 100% 71%; --primary-foreground: 0 0% 100%;
+        --secondary: 188 40% 60%; --secondary-foreground: 0 0% 100%;
+        --muted: 210 40% 96.1%; --muted-foreground: 215.4 16.3% 46.9%;
+        --accent: 0 0% 96.1%; --accent-foreground: 0 0% 9%;
+        --destructive: 0 83% 47%; --destructive-foreground: 210 40% 98%;
+        --border: 214.3 31.8% 91.4%; --input: 0 0% 80%; --ring: 0 0% 0% 0%;
+        --radius: 0.5rem;
+      }
+      html, body { margin: 0; padding: 0; font-family: system-ui, sans-serif; font-size: 14px; }
+      body { background: hsl(var(--background)); color: hsl(var(--foreground)); }
+    </style>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "vue": "https://cdn.jsdelivr.net/npm/vue@3.5.13/dist/vue.esm-browser.js",
+          "lucide-vue-next": "https://cdn.jsdelivr.net/npm/lucide-vue-next@0.460.0/+esm"
+        }
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/vue3-sfc-loader"></script>
+    <script src="./api.js"></script>
+  </head>
+  <body class="h-screen">
+    <div id="app" class="h-full"></div>
+
+    <script type="module">
+      import * as Vue from "vue";
+      import * as LucideVue from "lucide-vue-next";
+
+      const { createApp, defineAsyncComponent } = Vue;
+      const { loadModule } = window["vue3-sfc-loader"];
+
+      const sfcOptions = {
+        moduleCache: {
+          vue: Vue,
+          "lucide-vue-next": LucideVue,
+        },
+        async getFile(url) {
+          const resp = await fetch(url);
+          if (!resp.ok) throw resp;
+          return await resp.text();
+        },
+        addStyle(styleStr) {
+          const s = document.createElement("style");
+          s.textContent = styleStr;
+          document.head.appendChild(s);
+        },
+        log(type, ...args) { console.log("[sfc-" + type + "]", ...args); },
+      };
+
+      const app = createApp({
+        data: () => ({
+          tab: "tree",
+          treeKey: 0,
+          tabs: [
+            { value: "tree", label: "Tree" },
+            { value: "settings", label: "Settings" },
+          ],
+        }),
+        watch: { tab(v) { if (v === "tree") this.treeKey++; } },
+        components: {
+          "tree-view": defineAsyncComponent(() =>
+            loadModule("./components/tree-view.vue", sfcOptions)
+          ),
+          "discover-panel": defineAsyncComponent(() =>
+            loadModule("./components/discover-panel.vue", sfcOptions)
+          ),
+        },
+        template: `
+          <div class="flex h-screen flex-col">
+            <div class="border-b">
+              <nav class="flex px-6 pt-4 gap-1">
+                <button v-for="t in tabs" :key="t.value"
+                  :class="[
+                    'px-3 py-2 text-sm rounded-t-md border-b-2 -mb-px',
+                    tab === t.value
+                      ? 'border-primary text-primary font-medium'
+                      : 'border-transparent text-muted-foreground hover:text-foreground',
+                  ]"
+                  @click="tab = t.value">
+                  {{ t.label }}
+                </button>
+              </nav>
+            </div>
+            <div class="flex-1 overflow-auto">
+              <tree-view v-if="tab === 'tree'" :key="treeKey" />
+              <discover-panel v-else-if="tab === 'settings'" />
+            </div>
+          </div>
+        `,
+      });
+      app.mount("#app");
+    </script>
+  </body>
+</html>

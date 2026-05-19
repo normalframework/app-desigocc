@@ -1,0 +1,8 @@
+{
+  "name":  "import-selected",
+  "entryPoint":  "/hooks/import-selected.js",
+  "points":  {
+    "noPoints":  true
+  },
+  "mode":  "MODE_ON_REQUEST"
+}
