@@ -225,6 +225,12 @@
       }, { timeoutMs: 30000 }),
     downloadProgram: (objectId) =>
       NF.invokeHook("discover", { action: "download_program", objectId }, { timeoutMs: 60000 }),
+    hasGraphic: (objectId) =>
+      NF.invokeHook("discover", { action: "has_graphic", objectId }, { timeoutMs: 15000 }),
+    listGraphics: (designation) =>
+      NF.invokeHook("discover", { action: "list_graphics", designation }, { timeoutMs: 20000 }),
+    getGraphic: (objectId) =>
+      NF.invokeHook("discover", { action: "get_graphic", objectId }, { timeoutMs: 60000 }),
     resetCache: () => NF.invokeHook("discover", { action: "reset_cache" }),
   };
 

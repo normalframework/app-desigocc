@@ -89,10 +89,6 @@ const CONFIG_PATH = path.join(STATE_DIR, "config.json");
 const CACHE_DIR = path.join(STATE_DIR, "cache");
 const DEFAULT_CONFIG = { selectedViews: [], selectedDisciplines: [], selectedObjectTypes: [], selectedNodes: [] };
 
-// Local cache for WSI discovery results. Entries are read/written as
-// {ts, data} JSON files under state/cache/. No automatic expiry — only
-// invalidated by the reset_cache action or by the caller passing
-// forceRefresh:"true".
 function cacheKeyHex(parts) {
   return crypto.createHash("sha1").update(parts.join("\0")).digest("hex");
 }
@@ -163,9 +159,6 @@ function isValueName(name) {
   return name === "Value" || name === "Present_Value";
 }
 
-// Decode one PPCL line record from its hex string. Format:
-//   <4-byte header> <01 00 LEN bytes>{3} <trailing flags>
-// The third length-prefixed string is the human-readable program line.
 function decodePPCLRecord(hexStr) {
   const bytes = new Uint8Array(Math.floor(hexStr.length / 2));
   for (let i = 0; i < bytes.length; i++) {
@@ -183,6 +176,64 @@ function decodePPCLRecord(hexStr) {
     i += 3 + len;
   }
   return parts[2] || "";
+}
+
+async function hasGraphic(http, config, sdk, objectId) {
+  return await withFreshToken(http, config, sdk, async (token) => {
+    try {
+      const resp = await http.get(
+        `${config.baseUrl}/graphics/${encodeURIComponent(objectId)}`,
+        {
+          headers: { authorization: `Bearer ${token}` },
+          validateStatus: (s) => s === 200 || s === 204 || (s >= 400 && s < 500 && s !== 401),
+          timeout: 10000,
+          httpsAgent: norisHttpsAgent,
+        }
+      );
+      return { hasGraphic: resp.status === 200, status: resp.status };
+    } catch (e) {
+      if (e.response && e.response.status === 401) throw e;
+      sdk.logEvent(`hasGraphic ${objectId} failed: ${e.response?.status || e.message}`);
+      return { hasGraphic: false, error: e.message };
+    }
+  });
+}
+
+async function listGraphics(http, config, sdk, designation) {
+  return await withFreshToken(http, config, sdk, async (token) => {
+    try {
+      const resp = await http.get(
+        `${config.baseUrl}/graphics/itemIds/${encodeURIComponent(designation)}`,
+        {
+          headers: { authorization: `Bearer ${token}` },
+          validateStatus: (s) => s === 200 || s === 204 || (s >= 400 && s < 500 && s !== 401),
+          timeout: 15000,
+          httpsAgent: norisHttpsAgent,
+        }
+      );
+      if (resp.status === 204) return [];
+      return Array.isArray(resp.data) ? resp.data : [];
+    } catch (e) {
+      if (e.response && e.response.status === 401) throw e;
+      sdk.logEvent(`listGraphics ${designation} failed: ${e.response?.status || e.message}`);
+      return [];
+    }
+  });
+}
+
+async function getGraphic(http, config, sdk, objectId) {
+  return await withFreshToken(http, config, sdk, async (token) => {
+    const resp = await http.get(
+      `${config.baseUrl}/graphics/items/${encodeURIComponent(objectId)}`,
+      {
+        headers: { authorization: `Bearer ${token}`, Accept: "text/xml,application/xml,*/*" },
+        responseType: "text",
+        timeout: 30000,
+        httpsAgent: norisHttpsAgent,
+      }
+    );
+    return resp.data;
+  });
 }
 
 async function listDisciplines(http, config, sdk) {
@@ -228,9 +279,6 @@ async function listViews(http, config, sdk, systemId) {
   });
 }
 
-// Per PDF §7.6.2: pass the parent Designation as :node. Designations contain
-// colons (e.g. "System1.ManagementView:ManagementView") so encodeURIComponent
-// is required — the gateway forwards encoded segments through.
 async function listChildren(http, config, sdk, systemId, viewId, designation) {
   if (!systemId || !viewId || !designation) {
     throw new Error("list_children requires systemId, viewId, designation");
@@ -259,9 +307,6 @@ async function listChildren(http, config, sdk, systemId, viewId, designation) {
 }
 
 async function listObjectTypes(http, config, sdk) {
-  // Same /tables/<name>/subgroups pattern as disciplines (PDF §7.16). Some
-  // patch levels mount it under different paths; try a few before failing
-  // soft. Returns whatever shape Desigo gives us.
   const candidates = [
     `${config.baseUrl}/tables/objecttypes/subgroups`,
     `${config.baseUrl}/tables/objectTypes/subgroups`,
@@ -322,6 +367,88 @@ async function listNodeProperties(http, config, sdk, objectId) {
   });
 }
 
+// Diagnostic for the WSI Command Service. For one objectId, lists every
+// property exposed by /properties and probes /commands for each across
+// the clientType variants. Returns the raw command list so we can see
+// what's actually writable.
+async function probeWrite(http, config, sdk, objectId) {
+  const out = { objectId, properties: [] };
+  const propsResp = await withFreshToken(http, config, sdk, async (token) => {
+    const r = await http.post(
+      `${config.baseUrl}/properties?readAllProperties=True`,
+      [objectId],
+      { headers: { authorization: `Bearer ${token}` },
+        timeout: 15000, httpsAgent: norisHttpsAgent }
+    );
+    return r.data || [];
+  });
+  const propEntries = [];
+  for (const obj of propsResp) {
+    for (const p of (obj.Properties || [])) {
+      propEntries.push({
+        PropertyName: p.PropertyName,
+        Type: p.Type,
+        IsCommandEnabled: p.IsCommandEnabled,
+        Descriptor: p.Descriptor,
+      });
+    }
+  }
+  out.propertyCount = propEntries.length;
+  out.allProperties = propEntries;
+
+  const PROBE_LIMIT = 60;
+  const probed = propEntries.slice(0, PROBE_LIMIT);
+  out.probedCount = probed.length;
+
+  const variants = [
+    { qs: "", label: "default" },
+    { qs: "?clientType=Headless", label: "Headless" },
+    { qs: "?clientType=Headful", label: "Headful" },
+    { qs: "?clientType=All&enabledCommandsOnly=false", label: "All+disabled" },
+  ];
+
+  for (const pe of probed) {
+    const propId = `${objectId}.${pe.PropertyName}`;
+    const row = { propertyName: pe.PropertyName, type: pe.Type, isCommandEnabled: pe.IsCommandEnabled, variants: {} };
+    for (const v of variants) {
+      try {
+        const data = await withFreshToken(http, config, sdk, async (token) => {
+          const r = await http.get(
+            `${config.baseUrl}/commands/${encodeURIComponent(propId)}${v.qs}`,
+            { headers: { authorization: `Bearer ${token}` },
+              timeout: 15000, httpsAgent: norisHttpsAgent,
+              validateStatus: (s) => s === 200 || s === 204 || (s >= 400 && s < 500 && s !== 401) }
+          );
+          return { status: r.status, body: r.data };
+        });
+        const arr = Array.isArray(data.body) ? data.body : [];
+        const first = arr[0] || {};
+        const cmds = first.Commands || [];
+        row.variants[v.label] = {
+          status: data.status,
+          errorCode: first.ErrorCode,
+          commandCount: cmds.length,
+          commands: cmds.map((c) => ({
+            Id: c.Id,
+            Descriptor: c.Descriptor,
+            IsDefault: c.IsDefault,
+            Configuration: c.Configuration,
+            Parameters: (c.Parameters || []).map((p) => ({
+              Name: p.Name, DataType: p.DataType, DefaultValue: p.DefaultValue,
+              Min: p.Min, Max: p.Max,
+              EnumerationTexts: (p.EnumerationTexts || []).map((e) => e.Descriptor),
+            })),
+          })),
+        };
+      } catch (e) {
+        row.variants[v.label] = { error: e.response?.status || e.message };
+      }
+    }
+    out.properties.push(row);
+  }
+  return out;
+}
+
 module.exports = async ({ sdk, config, args }) => {
   const action = (args && args.action) || "";
   sdk.logEvent(`discover action=${action || "(none)"}`);
@@ -337,7 +464,6 @@ module.exports = async ({ sdk, config, args }) => {
         return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, config: cfg }));
       }
       case "save_config": {
-        // Each *Args is optional — when omitted we keep the prior value.
         const prior = await loadConfig();
         const next = {
           selectedViews: args.selectedViews !== undefined ? safeParseArray(args.selectedViews) : prior.selectedViews || [],
@@ -413,7 +539,63 @@ module.exports = async ({ sdk, config, args }) => {
         sdk.logEvent(`reset_cache removed ${removed} file(s)`);
         return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, removed }));
       }
-case "download_program": {
+      case "has_graphic": {
+        const objectId = args.objectId;
+        if (!objectId) return NormalSdk.InvokeError("has_graphic requires objectId");
+        const file = `graphics-check/${cacheKeyHex([objectId])}.json`;
+        const force = String(args.forceRefresh || "") === "true";
+        if (!force) {
+          const cached = await readCache(file);
+          if (cached) {
+            return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, ...cached.data, cached: true, cachedAt: cached.ts }));
+          }
+        }
+        const result = await hasGraphic(http, config, sdk, objectId);
+        const entry = await writeCache(file, result);
+        return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, ...result, cached: false, cachedAt: entry.ts }));
+      }
+      case "list_graphics": {
+        const designation = args.designation;
+        if (!designation) return NormalSdk.InvokeError("list_graphics requires designation");
+        const file = `graphics-list/${cacheKeyHex([designation])}.json`;
+        const force = String(args.forceRefresh || "") === "true";
+        if (!force) {
+          const cached = await readCache(file);
+          if (cached) {
+            return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, items: cached.data, cached: true, cachedAt: cached.ts }));
+          }
+        }
+        const items = await listGraphics(http, config, sdk, designation);
+        const entry = await writeCache(file, items);
+        sdk.logEvent(`list_graphics ${designation} -> ${items.length}`);
+        return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, items, cached: false, cachedAt: entry.ts }));
+      }
+      case "get_graphic": {
+        const objectId = args.objectId;
+        if (!objectId) return NormalSdk.InvokeError("get_graphic requires objectId");
+        const sha = cacheKeyHex([objectId]);
+        const file = `graphics/${sha.substr(0, 2)}/${sha.substr(2, 2)}/${sha}.json`;
+        const force = String(args.forceRefresh || "") === "true";
+        if (!force) {
+          const cached = await readCache(file);
+          if (cached) {
+            sdk.logEvent(`cache hit ${file} (${objectId})`);
+            return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, xml: cached.data, cached: true, cachedAt: cached.ts }));
+          }
+        }
+        try {
+          const xml = await getGraphic(http, config, sdk, objectId);
+          if (!xml || (typeof xml === "string" && xml.length === 0)) {
+            return NormalSdk.InvokeError(`get_graphic ${objectId}: empty response`);
+          }
+          const entry = await writeCache(file, xml);
+          sdk.logEvent(`get_graphic ${objectId} -> ${xml.length} bytes`);
+          return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, xml, cached: false, cachedAt: entry.ts }));
+        } catch (e) {
+          return NormalSdk.InvokeError(`get_graphic: ${e.response?.status || ""} ${e.message}`);
+        }
+      }
+      case "download_program": {
         const objectId = args.objectId;
         if (!objectId) return NormalSdk.InvokeError("download_program requires objectId");
         const values = await withFreshToken(http, config, sdk, async (token) => {
@@ -459,6 +641,12 @@ case "download_program": {
         const entry = await writeCache(file, properties);
         return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, properties, cached: false, cachedAt: entry.ts }));
       }
+      case "probe_write": {
+        const objectId = args.objectId;
+        if (!objectId) return NormalSdk.InvokeError("probe_write requires objectId");
+        const result = await probeWrite(http, config, sdk, objectId);
+        return NormalSdk.InvokeSuccess(JSON.stringify({ ok: true, ...result }));
+      }
       default:
         return NormalSdk.InvokeError(`Unknown action '${action}'.`);
     }
@@ -473,5 +661,3 @@ function safeParseArray(v) {
   if (Array.isArray(v)) return v;
   try { const p = JSON.parse(v); return Array.isArray(p) ? p : []; } catch { return []; }
 }
-
-

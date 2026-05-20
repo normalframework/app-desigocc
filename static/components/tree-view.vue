@@ -64,6 +64,15 @@
       </div>
     </div>
     <div
+      v-if="graphicDownloading"
+      class="mb-3 rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-sm"
+    >
+      <div class="flex items-start gap-2">
+        <Loader2 class="h-4 w-4 mt-0.5 shrink-0 animate-spin text-primary" />
+        <div class="flex-1 font-mono text-xs">{{ graphicStatus || "Fetching graphic…" }}</div>
+      </div>
+    </div>
+    <div
       v-if="error"
       class="mb-3 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
     >
@@ -108,11 +117,12 @@
           :depth="0"
           :selection="selection"
           @select="onSelect"
+          @download-graphic="onDownloadGraphic"
         />
       </div>
     </div>
 
-    <!-- Import result modal (custom; no radix dependency) -->
+    <!-- Import result modal -->
     <div v-if="resultDialog" class="fixed inset-0 z-50 flex items-center justify-center p-4" @click.self="resultDialog = false">
       <div class="absolute inset-0 bg-black/40"></div>
       <div class="relative bg-card rounded-lg shadow-xl w-full max-w-md focus:outline-none">
@@ -196,7 +206,8 @@ export default {
     resultError: "",
     resultCounts: {},
     resultDryRun: false,
-    AlertCircle, CheckCircle2,
+    graphicDownloading: false,
+    graphicStatus: "",
   }),
   computed: {
     savedCount() { return this.savedSelection.size; },
@@ -259,6 +270,123 @@ export default {
       this.selectionCount = next.size;
     },
     clearSelection() { this.selection = new Map(); this.selectionCount = 0; },
+    // Build a STANDALONE SVG from the WSI wrapper. The raw response is
+    //   <graphicItems><graphic><svg>…</svg></graphic>
+    //                 <libraries><svg>…</svg>…</libraries></graphicItems>
+    // — which is NOT a valid SVG (root is <graphicItems>), and the
+    // <libraries> siblings make viewers render extra floating pictures.
+    // We (a) hoist library <symbol>/<defs>/etc into the main <svg>'s
+    // <defs>, and (b) strip Desigo XAML-namespace elements
+    // (Graphic.Depths, GmsCanvas, Datapoint, Evaluation, Substitution, …)
+    // that are inert outside the OPS viewer but throw off generic SVG
+    // renderers. Returns serialized SVG text suitable for any viewer.
+    extractStandaloneSvg(xml) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, "text/xml");
+      const perr = doc.querySelector("parsererror");
+      if (perr) throw new Error("XML parse error: " + perr.textContent.slice(0, 200));
+      const mainSvg = doc.querySelector("graphic > svg");
+      if (!mainSvg) throw new Error("No <svg> in <graphic> section.");
+      let defs = null;
+      for (const c of Array.from(mainSvg.children)) {
+        if (c.localName === "defs") { defs = c; break; }
+      }
+      if (!defs) {
+        defs = doc.createElementNS("http://www.w3.org/2000/svg", "defs");
+        mainSvg.insertBefore(defs, mainSvg.firstChild);
+      }
+      const PROMOTABLE = new Set([
+        "defs", "symbol",
+        "linearGradient", "radialGradient",
+        "pattern", "marker", "clipPath", "mask", "filter",
+        "style",
+      ]);
+      for (const libSvg of doc.querySelectorAll("libraries > svg")) {
+        for (const child of Array.from(libSvg.children)) {
+          if (child.localName === "defs") {
+            for (const grand of Array.from(child.children)) defs.appendChild(grand);
+          } else if (PROMOTABLE.has(child.localName)) {
+            defs.appendChild(child);
+          }
+        }
+      }
+      const SVG_ELEMENTS = new Set([
+        "svg", "g", "defs", "symbol", "use", "view",
+        "a", "switch", "foreignObject",
+        "rect", "circle", "ellipse", "line", "polyline", "polygon", "path",
+        "text", "tspan", "textPath",
+        "image",
+        "linearGradient", "radialGradient", "stop",
+        "pattern", "marker", "clipPath", "mask", "filter",
+        "feBlend", "feColorMatrix", "feComponentTransfer", "feComposite",
+        "feConvolveMatrix", "feDiffuseLighting", "feDisplacementMap",
+        "feDistantLight", "feDropShadow", "feFlood", "feFuncA", "feFuncB",
+        "feFuncG", "feFuncR", "feGaussianBlur", "feImage", "feMerge",
+        "feMergeNode", "feMorphology", "feOffset", "fePointLight",
+        "feSpecularLighting", "feSpotLight", "feTile", "feTurbulence",
+        "style", "title", "desc", "metadata",
+        "animate", "animateTransform", "animateMotion", "set", "mpath",
+      ]);
+      const stripUnknown = (node) => {
+        for (const child of Array.from(node.children)) {
+          if (!SVG_ELEMENTS.has(child.localName)) node.removeChild(child);
+          else stripUnknown(child);
+        }
+      };
+      stripUnknown(mainSvg);
+      return new XMLSerializer().serializeToString(mainSvg);
+    },
+    async onDownloadGraphic({ designation, name }) {
+      if (this.graphicDownloading) return;
+      this.graphicDownloading = true;
+      this.graphicStatus = `Listing graphics for ${name}…`;
+      this.error = ""; this.info = "";
+      try {
+        const r = await discover.listGraphics(designation);
+        const items = (r && r.items) || [];
+        if (!items.length) {
+          this.error = "No graphics returned for this node.";
+          return;
+        }
+        let n = 0;
+        for (const it of items) {
+          this.graphicStatus = `Downloading ${it.DisplayName || it.ObjectId} (${n + 1}/${items.length})…`;
+          const g = await discover.getGraphic(it.ObjectId);
+          const xml = (g && g.xml) || "";
+          if (!xml) continue;
+          // Produce a standalone SVG so it renders in any viewer.
+          // If the XML somehow doesn't parse, fall back to raw so the
+          // user can still inspect what WSI returned.
+          let svgText;
+          try {
+            svgText = this.extractStandaloneSvg(xml);
+            svgText = '<?xml version="1.0" encoding="utf-8"?>' + svgText;
+          } catch (e) {
+            console.warn("extractStandaloneSvg failed for", it.ObjectId, e);
+            svgText = xml;
+          }
+          const base = (it.DisplayName || it.ObjectId || name || "graphic")
+            .replace(/[^A-Za-z0-9._-]/g, "_");
+          const fname = items.length > 1 ? `${base}_${n + 1}.svg` : `${base}.svg`;
+          const blob = new Blob([svgText], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = fname;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          n++;
+        }
+        this.info = `Downloaded ${n} graphic${n === 1 ? "" : "s"} for ${name}.`;
+      } catch (e) {
+        this.error = "download_graphic: " + e.message;
+      } finally {
+        this.graphicDownloading = false;
+        this.graphicStatus = "";
+      }
+    },
     async resetCache() {
       if (this.resettingCache) return;
       if (!confirm("Drop cached Desigo discovery results? The next tree expand will refetch from Desigo (slower).")) return;
@@ -292,8 +420,7 @@ export default {
         if (this.hasChanges) await this.saveSelection();
         const r = await importSelectedApi(
           dryRun ? { dryRun: "true" } : {},
-          (events /*, state */) => {
-            // events[0] is the most recent — show it verbatim.
+          (events) => {
             if (events && events.length) this.importStatus = events[0].message;
           }
         );

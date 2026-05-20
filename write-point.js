@@ -180,6 +180,7 @@ server.addService(HplDriverService, {
       const res = await http.get(g_config.baseUrl + "/commands/" + point.getProtocolId(), {
         headers: auth_headers,
       });
+      console.log(res)
     }
     reply.setErrorsList(errors);
     callback(null, reply);

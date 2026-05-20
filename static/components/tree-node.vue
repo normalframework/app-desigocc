@@ -34,6 +34,13 @@
         <span v-if="shortType" class="ml-2 text-xs text-muted-foreground">{{ shortType }}</span>
         <span v-if="propCountHint" class="ml-2 text-xs text-muted-foreground">· {{ propCountHint }}</span>
       </div>
+      <button v-if="hasGraphic"
+        type="button"
+        class="ml-1 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+        :title="`Download graphic for ${node.Descriptor || node.Name}`"
+        @click.stop="onDownloadGraphic">
+        <ImageIcon class="h-3.5 w-3.5" />
+      </button>
       <span v-if="disciplineLabel" class="ml-2 rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
         {{ disciplineLabel }}
       </span>
@@ -56,7 +63,9 @@
 
       <tree-node v-for="c in visibleChildren" :key="c.Designation"
         :node="c" :system-id="systemId" :view-id="viewId" :depth="depth + 1"
-        :selection="selection" @select="$emit('select', $event)" />
+        :selection="selection"
+        @select="$emit('select', $event)"
+        @download-graphic="$emit('download-graphic', $event)" />
       <button
         v-if="children.length > visibleCount"
         type="button"
@@ -71,7 +80,10 @@
 </template>
 
 <script>
-import { Check, ChevronDown, ChevronRight, Dot, Download, Loader2, Minus } from "lucide-vue-next";
+// `Image` aliased to ImageIcon because the bare name collides with the
+// browser's HTMLImageElement constructor and Vue's template resolver
+// occasionally picks up the wrong one inside an SFC compiled at runtime.
+import { Check, ChevronDown, ChevronRight, Dot, Download, Image as ImageIcon, Loader2, Minus } from "lucide-vue-next";
 
 const discover = window.NF.discover;
 
@@ -84,7 +96,7 @@ function isDescendant(ancestor, candidate) {
 
 export default {
   name: "TreeNode",
-  components: { Check, ChevronDown, ChevronRight, Dot, Download, Loader2, Minus },
+  components: { Check, ChevronDown, ChevronRight, Dot, Download, ImageIcon, Loader2, Minus },
   props: {
     node: { type: Object, required: true },
     systemId: { type: Number, required: true },
@@ -92,13 +104,15 @@ export default {
     depth: { type: Number, default: 0 },
     selection: { type: Object, required: true },
   },
-  emits: ["select"],
+  emits: ["select", "download-graphic"],
   data: () => ({
     expanded: false, loading: false, loadingProperties: false,
     error: "", propertiesError: "",
     children: [], ownProperties: [], propertiesFetched: false,
     downloading: false,
     visibleCount: 200,
+    hasGraphic: false,
+    graphicChecked: false,
   }),
   computed: {
     visibleChildren() { return this.children.slice(0, this.visibleCount); },
@@ -143,6 +157,12 @@ export default {
       ];
     },
   },
+  // Probe each row's graphic availability on mount. The cache on the
+  // hook side makes repeat checks effectively free, so even folders
+  // with many siblings only pay once.
+  mounted() {
+    if (!this.graphicChecked && this.canFetchProperties) this.checkGraphic();
+  },
   methods: {
     async toggle() {
       if (this.expanded) { this.expanded = false; return; }
@@ -151,6 +171,25 @@ export default {
       if (!this.children.length && !this.loading) tasks.push(this.loadChildren());
       if (!this.propertiesFetched && !this.loadingProperties && this.canFetchProperties) tasks.push(this.loadOwnProperties());
       await Promise.all(tasks);
+    },
+    async checkGraphic() {
+      // Cheap probe (200 / 204). Skip view-roots — same canFetchProperties
+      // guard rules out synthetic ObjectId == Designation cases.
+      try {
+        const r = await discover.hasGraphic(this.node.ObjectId);
+        this.hasGraphic = !!(r && r.hasGraphic);
+      } catch (e) {
+        // Silent: not all nodes are graphical, network blips are fine to ignore.
+      } finally {
+        this.graphicChecked = true;
+      }
+    },
+    onDownloadGraphic() {
+      this.$emit("download-graphic", {
+        designation: this.node.Designation,
+        objectId: this.node.ObjectId,
+        name: this.node.Descriptor || this.node.Name || this.node.ObjectId,
+      });
     },
     async loadChildren() {
       this.loading = true; this.error = "";
